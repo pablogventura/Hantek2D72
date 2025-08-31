@@ -1,10 +1,20 @@
 # Hantek
-Hantek 2D72 handheld oscillosope tool for linux
 
-This is an unofficial implementation of a graphical tool to manage Hantek2D72 handheld oscilloscope.
+Hantek 2D72 handheld oscilloscope tool for Linux written in Python.
 
-The official tool is only for Windows, so I've developed this tool for personal use and I've decided to share it!
+This repository now provides a Python implementation of the graphical tool
+using [PyUSB](https://github.com/pyusb/pyusb) and GTK via PyGObject.  It is a
+port of the original C version and offers a simple way to control the
+oscilloscope on Linux.
 
-I've tested the tool only with my oscilloscope, so I don't guarantee it works with others.
+## Running
 
-The use of this tool is at youw own risk, I don't grant its safety!
+```bash
+python3 Hantek.py
+```
+
+The application relies on the `Hantek.glade` file for its user interface and
+will automatically create `Hantek.cfg` to store settings.
+
+Use of this tool is at your own risk; it has only been tested with a single
+oscilloscope unit.
