@@ -63,8 +63,16 @@ class HantekCommand:
     vals: list[int] = field(default_factory=lambda: [0, 0, 0, 0])
 
     def to_bytes(self) -> bytes:
-        return struct.pack("<BBHBBBBB", 0x00, 0x0A, self.func, self.cmd,
-                            *self.vals, 0x00)
+        """Return command in the 10-byte format used on the USB wire."""
+        return struct.pack(
+            "<BBHBBBBBB",
+            0x00,
+            0x0A,
+            self.func,
+            self.cmd,
+            *self.vals,
+            0x00,
+        )
 
 
 def _default_list(v, n):
