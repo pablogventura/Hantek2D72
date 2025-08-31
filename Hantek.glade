@@ -22,22 +22,22 @@
   <object class="GtkImage" id="Start1">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="stock">gtk-media-play</property>
+    <property name="icon-name">media-playback-start</property>
   </object>
   <object class="GtkImage" id="Start2">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="stock">gtk-media-play</property>
+    <property name="icon-name">media-playback-start</property>
   </object>
   <object class="GtkImage" id="Stop1">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="stock">gtk-media-stop</property>
+    <property name="icon-name">media-playback-stop</property>
   </object>
   <object class="GtkImage" id="Stop2">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="stock">gtk-media-stop</property>
+    <property name="icon-name">media-playback-stop</property>
   </object>
   <object class="GtkAdjustment" id="awg_amp_adj">
     <property name="upper">2.5</property>
