@@ -51,7 +51,9 @@ SCREEN_VAL_SCOPE = 0x00
 SCREEN_VAL_DMM = 0x01
 SCREEN_VAL_AWG = 0x02
 
-CONFIG_FILE = "Hantek.cfg"
+# Configuration storage
+CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "Hantek2D72")
+CONFIG_FILE = os.path.join(CONFIG_DIR, "Hantek.cfg")
 
 # ---------------------------------------------------------------------------
 # Data structures
@@ -102,6 +104,7 @@ def load_config() -> Config:
 
 
 def save_config(cfg: Config) -> None:
+    os.makedirs(CONFIG_DIR, exist_ok=True)
     with open(CONFIG_FILE, "w", encoding="utf8") as fh:
         json.dump(cfg.__dict__, fh, indent=2)
 # ---------------------------------------------------------------------------
@@ -175,6 +178,28 @@ def on_channel_enable(switch: Gtk.Switch, state: bool, data=None):
     return True
 
 
+def on_channel_offset(widget: Gtk.SpinButton, scroll, data=None):
+    save_config(cur_config)
+
+
+def on_channel_bwlimit(switch: Gtk.Switch, state: bool, data=None):
+    switch.set_state(state)
+    save_config(cur_config)
+    return True
+
+
+def on_channel_coupling(widget: Gtk.ComboBox, data=None):
+    save_config(cur_config)
+
+
+def on_channel_scale(widget: Gtk.ComboBox, data=None):
+    save_config(cur_config)
+
+
+def on_channel_probe(widget: Gtk.ComboBox, data=None):
+    save_config(cur_config)
+
+
 def on_time_scale(widget: Gtk.ComboBox, data=None):
     val = widget.get_active()
     cur_config.time_scale = val
@@ -199,12 +224,28 @@ def on_trigger_source(widget: Gtk.ComboBox, data=None):
     save_config(cur_config)
 
 
+def on_trigger_slope(widget: Gtk.ComboBox, data=None):
+    return
+
+
+def on_trigger_mode(widget: Gtk.ComboBox, data=None):
+    return
+
+
 def on_trigger_level(widget: Gtk.SpinButton, scroll, data=None):
     val = widget.get_value()
     cur_config.trigger_level = val
     send_command(handle, HantekCommand(FUNC_SCOPE_SETTING, SCOPE_TRIGGER_LEVEL,
                                        [int(val), 0, 0, 0]))
     save_config(cur_config)
+
+
+def on_start(widget, data=None):
+    return
+
+
+def on_stop(widget, data=None):
+    return
 
 
 def on_awg_freq(widget: Gtk.SpinButton, scroll, data=None):
@@ -230,6 +271,22 @@ def on_awg_offset(widget: Gtk.SpinButton, scroll, data=None):
     vals = [abs(int(val*1000)), int(val < 0), 0, 0]
     send_command(handle, HantekCommand(FUNC_AWG_SETTING, AWG_OFF, vals))
     save_config(cur_config)
+
+
+def on_awg_type(widget: Gtk.ComboBox, data=None):
+    return
+
+
+def on_awg_square_duty(widget: Gtk.SpinButton, scroll, data=None):
+    return
+
+
+def on_awg_ramp_duty(widget: Gtk.SpinButton, scroll, data=None):
+    return
+
+
+def on_awg_trap_duty(widget: Gtk.SpinButton, scroll, data=None):
+    return
 
 
 def on_awg_start(widget, data=None):
@@ -346,10 +403,23 @@ def setup_gui(builder: Gtk.Builder) -> None:
 handlers = {
     "on_window_main_destroy": on_window_main_destroy,
     "on_channel_enable": on_channel_enable,
+    "on_channel_offset": on_channel_offset,
+    "on_channel_bwlimit": on_channel_bwlimit,
+    "on_channel_coupling": on_channel_coupling,
+    "on_channel_scale": on_channel_scale,
+    "on_channel_probe": on_channel_probe,
     "on_time_scale": on_time_scale,
     "on_time_offset": on_time_offset,
     "on_trigger_source": on_trigger_source,
+    "on_trigger_slope": on_trigger_slope,
+    "on_trigger_mode": on_trigger_mode,
     "on_trigger_level": on_trigger_level,
+    "on_start": on_start,
+    "on_stop": on_stop,
+    "on_awg_type": on_awg_type,
+    "on_awg_square_duty": on_awg_square_duty,
+    "on_awg_ramp_duty": on_awg_ramp_duty,
+    "on_awg_trap_duty": on_awg_trap_duty,
     "on_awg_freq": on_awg_freq,
     "on_awg_amp": on_awg_amp,
     "on_awg_offset": on_awg_offset,
