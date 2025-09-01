@@ -346,6 +346,16 @@ def capture_waveform() -> None:
 
     drawing_area.queue_draw()
 
+    # Resume regular scope operation so the device's own screen
+    # continues updating after each USB capture. Without this
+    # additional command the oscilloscope halts its display when the
+    # PC requests a waveform, appearing to "freeze" once Start is
+    # pressed in the application. Sending an empty capture request
+    # re-enables the live display on the instrument.
+    send_command(handle, HantekCommand(FUNC_SCOPE_CAPTURE,
+                                       SCOPE_START_RECV,
+                                       [0, 0, 0, 0]))
+
 
 def on_capture_button_clicked(widget, data=None):
     capture_waveform()
