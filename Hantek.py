@@ -338,23 +338,30 @@ def capture_waveform() -> None:
     send_command(handle, cmd)
 
     count = 0
-    while count < total_samples:
-        length = min(total_samples - count, 64)
-        data_read = handle.read(0x81, length)
-        capture_buffer[count:count + len(data_read)] = data_read
-        count += len(data_read)
+    try:
+        while count < total_samples:
+            length = min(total_samples - count, 64)
+            data_read = handle.read(0x81, length, timeout=2000)
+            capture_buffer[count:count + len(data_read)] = data_read
+            count += len(data_read)
+    except usb.core.USBTimeoutError:
+        # If the device fails to deliver the expected amount of data
+        # within the timeout, abort this capture but keep the
+        # application alive instead of raising an exception that would
+        # halt the UI and leave the oscilloscope in a frozen state.
+        print("USB read timed out; capture aborted")
+    finally:
+        drawing_area.queue_draw()
 
-    drawing_area.queue_draw()
-
-    # Resume regular scope operation so the device's own screen
-    # continues updating after each USB capture. Without this
-    # additional command the oscilloscope halts its display when the
-    # PC requests a waveform, appearing to "freeze" once Start is
-    # pressed in the application. Sending an empty capture request
-    # re-enables the live display on the instrument.
-    send_command(handle, HantekCommand(FUNC_SCOPE_CAPTURE,
-                                       SCOPE_START_RECV,
-                                       [0, 0, 0, 0]))
+        # Resume regular scope operation so the device's own screen
+        # continues updating after each USB capture. Without this
+        # additional command the oscilloscope halts its display when the
+        # PC requests a waveform, appearing to "freeze" once Start is
+        # pressed in the application. Sending an empty capture request
+        # re-enables the live display on the instrument.
+        send_command(handle, HantekCommand(FUNC_SCOPE_CAPTURE,
+                                           SCOPE_START_RECV,
+                                           [0, 0, 0, 0]))
 
 
 def on_capture_button_clicked(widget, data=None):
