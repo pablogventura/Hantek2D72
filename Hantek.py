@@ -18,7 +18,7 @@ import usb.util
 import gi
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk
+from gi.repository import Gtk, GLib
 
 # ---------------------------------------------------------------------------
 # Constants from Hantek.h
@@ -162,6 +162,9 @@ awg_offset_spinbutton: Gtk.SpinButton
 capture_samples_spinbutton: Gtk.SpinButton
 drawing_area: Gtk.Widget
 
+# GLib timeout source for continuous capture
+capture_source_id: int | None = None
+
 
 def on_window_main_destroy(widget, data):
     Gtk.main_quit()
@@ -241,11 +244,22 @@ def on_trigger_level(widget: Gtk.SpinButton, scroll, data=None):
 
 
 def on_start(widget, data=None):
-    return
+    global capture_source_id
+    if capture_source_id is None:
+        # Capture at ~10 frames per second
+        capture_source_id = GLib.timeout_add(100, _capture_loop)
 
 
 def on_stop(widget, data=None):
-    return
+    global capture_source_id
+    if capture_source_id is not None:
+        GLib.source_remove(capture_source_id)
+        capture_source_id = None
+
+
+def _capture_loop() -> bool:
+    capture_waveform()
+    return True
 
 
 def on_awg_freq(widget: Gtk.SpinButton, scroll, data=None):
@@ -312,10 +326,11 @@ def on_radio(button: Gtk.RadioButton, data=None):
 capture_buffer = bytearray(6000)
 
 
-def on_capture_button_clicked(widget, data=None):
+def capture_waveform() -> None:
+    """Request a capture from the oscilloscope and refresh the drawing."""
     num_channels = int(cur_config.channel_enable[0]) + int(cur_config.channel_enable[1])
     total_samples = cur_config.num_samples * num_channels
-    # Prepare capture command once with per-channel sample counts
+
     ch1_samples = cur_config.num_samples if cur_config.channel_enable[0] else 0
     ch2_samples = cur_config.num_samples if cur_config.channel_enable[1] else 0
     cmd = HantekCommand(FUNC_SCOPE_CAPTURE, SCOPE_START_RECV)
@@ -326,9 +341,14 @@ def on_capture_button_clicked(widget, data=None):
     while count < total_samples:
         length = min(total_samples - count, 64)
         data_read = handle.read(0x81, length)
-        capture_buffer[count:count+len(data_read)] = data_read
+        capture_buffer[count:count + len(data_read)] = data_read
         count += len(data_read)
+
     drawing_area.queue_draw()
+
+
+def on_capture_button_clicked(widget, data=None):
+    capture_waveform()
 
 
 def draw_callback(widget, cr, data=None):
