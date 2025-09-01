@@ -314,13 +314,17 @@ capture_buffer = bytearray(6000)
 
 def on_capture_button_clicked(widget, data=None):
     num_channels = int(cur_config.channel_enable[0]) + int(cur_config.channel_enable[1])
-    num_samples = cur_config.num_samples * num_channels
+    total_samples = cur_config.num_samples * num_channels
+    # Prepare capture command once with per-channel sample counts
+    ch1_samples = cur_config.num_samples if cur_config.channel_enable[0] else 0
+    ch2_samples = cur_config.num_samples if cur_config.channel_enable[1] else 0
+    cmd = HantekCommand(FUNC_SCOPE_CAPTURE, SCOPE_START_RECV)
+    cmd.vals = list(struct.pack('<HH', ch1_samples, ch2_samples))
+    send_command(handle, cmd)
+
     count = 0
-    while count < num_samples:
-        cmd = HantekCommand(FUNC_SCOPE_CAPTURE, SCOPE_START_RECV)
-        cmd.vals = list(struct.pack('<HH', num_samples//2, num_samples//2))
-        send_command(handle, cmd)
-        length = min(num_samples - count, 64)
+    while count < total_samples:
+        length = min(total_samples - count, 64)
         data_read = handle.read(0x81, length)
         capture_buffer[count:count+len(data_read)] = data_read
         count += len(data_read)
